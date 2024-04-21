@@ -93,7 +93,6 @@ def prepare_dataset():
     normalized_test = x_test.map(normalize)
         
     print("Element spec of normalized training dataset:", normalized_train.element_spec)
-    print("Sample element from normalized training dataset:", next(iter(normalized_train)))
     
     one_hot_train = y_train.map(lambda label: one_hot_matrix(label, num_classes=classes.size))    
     one_hot_y_test = y_test.map(lambda label: one_hot_matrix(label, num_classes=classes.size))
