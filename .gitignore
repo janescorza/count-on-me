@@ -127,6 +127,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.count-on-me-env
+count-on-me-env/
+count-on-me-env.bak/
 
 # Spyder project settings
 .spyderproject

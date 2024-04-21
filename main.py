@@ -1,7 +1,13 @@
 
 import random
 
+from utils.prepare_dataset import prepare_dataset
+
 def main():
+    
+    #prepare dataset
+    x_train, y_train, x_test, y_test = prepare_dataset()
+    
     while True:
         selected_number = random.randint(0, 5)
         user_input = input(f"Intput the number {selected_number} which is between 0 and 5 (press 'q' to quit): ")
