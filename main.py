@@ -1,10 +1,11 @@
 
 import random
 
+from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from model.neural_network_setup import compute_total_loss, forward_propagation, initialize_parameters, model
+from model.neural_network_setup import model
 from utils.prepare_dataset import prepare_dataset
 
 def prepare_model_hyperparameters(input_feature_size):
@@ -17,16 +18,37 @@ def prepare_model_hyperparameters(input_feature_size):
     Returns:
     Tuple of layer dimensions.
     """
+    learning_rate = 0.0001
+    num_epochs = 175
     n_x = input_feature_size 
     layers_dims = (n_x, 25, 12, 6)  
-    # layers_dims = (n_x, 24, 12, 6)  
-    return layers_dims
+    return layers_dims, learning_rate, num_epochs
 
 
 def main():
     x_train, y_train, x_test, y_test, input_features = prepare_dataset()
-    layer_dims = prepare_model_hyperparameters(input_features)
-    parameters, costs, train_acc, test_acc = model(x_train, y_train, x_test, y_test, layer_dims, num_epochs=100)
+    layer_dims, learning_rate, num_epochs = prepare_model_hyperparameters(input_features)
+    parameters, costs, train_acc, test_acc = model(x_train, y_train, x_test, y_test, layer_dims, num_epochs=num_epochs)
+    
+    # Plot the cost
+    plt.plot(np.squeeze(costs))
+    plt.ylabel('cost')
+    plt.xlabel('iterations (per tens)')
+    plt.title("Learning rate =" + str(learning_rate))
+    plt.show()
+    
+    # Plot the train accuracy
+    plt.plot(np.squeeze(train_acc))
+    plt.ylabel('Train Accuracy')
+    plt.xlabel('iterations (per tens)')
+    plt.title("Learning rate =" + str(learning_rate))
+    # Plot the test accuracy
+    plt.plot(np.squeeze(test_acc))
+    plt.ylabel('Test Accuracy')
+    plt.xlabel('iterations (per tens)')
+    plt.title("Learning rate =" + str(learning_rate))
+    plt.show()
+    
     
     while False: # Replace False with a True later in development
         selected_number = random.randint(0, 5)

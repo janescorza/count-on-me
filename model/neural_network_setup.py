@@ -136,9 +136,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, learning_rate = 0.0001,
         #Reset accuracy per epoch
         train_accuracy.reset_state()
 
-
-        for (minibatch_X, minibatch_Y) in minibatches:
-            
+        for minibatch_X, minibatch_Y in minibatches:
             with tf.GradientTape() as tape:
                 ZL = forward_propagation(tf.transpose(minibatch_X), parameters)
                 minibatch_total_loss = compute_total_loss(ZL, tf.transpose(minibatch_Y))
@@ -152,11 +150,11 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, learning_rate = 0.0001,
             # Apply the calculated gradients to the corresponding trainable variables using the specified optimizer.
             optimizer.apply_gradients(zip(grads, trainable_variables))
             # Accumulate the total loss of the epoch to later calculate the average loss per epoch.
-            epoch_total_loss += minibatch_total_loss.numpy()
-            # epoch_total_loss += minibatch_total_loss
+            epoch_total_loss += minibatch_total_loss
             
             # We accumulate the accuracy of all the batches
             train_accuracy.update_state(minibatch_Y, tf.transpose(ZL))
+            
   
         # Average loss over the number of samples
         epoch_total_loss /= m
@@ -168,8 +166,8 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, learning_rate = 0.0001,
             
             # We evaluate the test set every 10 epochs to avoid computational overhead
             for (minibatch_X, minibatch_Y) in test_minibatches:
-                Zl = forward_propagation(tf.transpose(minibatch_X), parameters)
-                test_accuracy.update_state(minibatch_Y, tf.transpose(ZL))
+                Z_test = forward_propagation(tf.transpose(minibatch_X), parameters)
+                test_accuracy.update_state(minibatch_Y, tf.transpose(Z_test))
             print("Test_accuracy:", test_accuracy.result())
 
             costs.append(epoch_total_loss)
