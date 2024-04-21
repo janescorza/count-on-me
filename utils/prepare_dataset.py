@@ -31,13 +31,16 @@ def load_dataset():
     train_dataset = h5py.File('data/training_set/train_signs.h5', "r")
     test_dataset = h5py.File('data/test_set/test_signs.h5', "r")
     
+    # assuming the datasets have a consistent set of classes
+    classes = train_dataset['list_classes'][:]
+    
     x_train = tf.data.Dataset.from_tensor_slices(train_dataset['train_set_x'])
     y_train = tf.data.Dataset.from_tensor_slices(train_dataset['train_set_y'])
 
     x_test = tf.data.Dataset.from_tensor_slices(test_dataset['test_set_x'])
     y_test = tf.data.Dataset.from_tensor_slices(test_dataset['test_set_y'])
     
-    return x_train, y_train, x_test, y_test
+    return x_train, y_train, x_test, y_test, classes
 
 def normalize(image):
     """
@@ -54,6 +57,21 @@ def normalize(image):
     image = tf.reshape(image, [-1,])
     return image
     
+def one_hot_matrix(label, num_classes=6):
+    """
+    Computes the one hot encoding for a single label
+    
+    Arguments:
+        label --  (int) Categorical labels
+        num_classes --  (int) Number of different classes that label can take
+        
+    Returns:
+         one_hot -- tf.Tensor A single-column matrix with the one hot encoding.
+    """
+
+    one_hot = tf.reshape(tf.one_hot(label, num_classes, axis=0), shape=[num_classes,])
+    return one_hot
+
 def prepare_dataset():
     """
     Prepares a small dataset for use, displays a sample image on request, and reshapes
@@ -62,27 +80,27 @@ def prepare_dataset():
     Returns:
     tuple of numpy.ndarray: Normalized training and testing data and labels.
     """
-    x_train, y_train, x_test, y_test = load_dataset()
+    x_train, y_train, x_test, y_test, classes = load_dataset()
     
     print("Element spec of training dataset:", x_train.element_spec)
-    print("Sample element from training dataset:", next(iter(x_train)))
+    print(f"The dataset contains {classes.size} classes which are the following: {classes}")
     
-    
-    # Finding unique labels using TensorFlow !-> batching added anticipating larger dataset
-    unique_labels = y_train.batch(500).reduce(initial_state=tf.constant([], dtype=tf.int64), 
-                                                reduce_func=lambda state, value: (tf.concat([state, value], axis=0)))
-    unique_labels = tf.unique(unique_labels).y.numpy()
-    print("Unique labels in dataset:", unique_labels)
-    
-    show_sample = input("Would you like to see an example of the pictures in the dataset? (y/n)")
-    if show_sample.lower() == 'y':
-        plot_sign_examples(x_train, y_train)
+    # show_sample = input("Would you like to see an example of the pictures in the dataset? (y/n)")
+    # if show_sample.lower() == 'y':
+    #     plot_sign_examples(x_train, y_train)
         
     normalized_train = x_train.map(normalize)
     normalized_test = x_test.map(normalize)
         
     print("Element spec of normalized training dataset:", normalized_train.element_spec)
     print("Sample element from normalized training dataset:", next(iter(normalized_train)))
-
     
-    return  normalized_train, y_train, normalized_test, y_test
+    one_hot_train = y_train.map(lambda label: one_hot_matrix(label, num_classes=classes.size))    
+    one_hot_y_test = y_test.map(lambda label: one_hot_matrix(label, num_classes=classes.size))
+    
+    print("Sample element from one hot element from training dataset labels:", next(iter(one_hot_train)))
+
+    input_sample = next(iter(normalized_train))
+    input_features = input_sample.shape[0]
+    
+    return  normalized_train, one_hot_train, normalized_test, one_hot_y_test, input_features

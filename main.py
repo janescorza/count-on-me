@@ -1,14 +1,33 @@
 
 import random
 
+import numpy as np
+import tensorflow as tf
+
 from utils.prepare_dataset import prepare_dataset
+
+def prepare_model_hyperparameters(input_feature_size):
+    """
+    Prepare layer dimensions for the neural network model based on the input shape.
+
+    Arguments:
+    input_feature_size -- (int) intput features of dataset.
+
+    Returns:
+    Tuple of layer dimensions.
+    """
+    n_x = input_feature_size 
+    layers_dims = (n_x, 24, 12, 6)  
+    return layers_dims
 
 def main():
     
     #prepare dataset
-    x_train, y_train, x_test, y_test = prepare_dataset()
+    x_train, y_train, x_test, y_test, input_features = prepare_dataset()
+    #preapre model params
+    layer_dims = prepare_model_hyperparameters(input_features)
     
-    while True:
+    while False: # Replace False with a True later in development
         selected_number = random.randint(0, 5)
         user_input = input(f"Intput the number {selected_number} which is between 0 and 5 (press 'q' to quit): ")
         if user_input.lower() == 'q':
