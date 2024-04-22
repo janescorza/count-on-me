@@ -83,6 +83,32 @@ def compute_total_loss(logits, labels):
 
     return total_loss
 
+def evaluate_model(parameters, test_minibatches):
+    """
+    Evaluate the neural network model on the test dataset.
+
+    Arguments:
+    parameters -- trained parameters of the neural network.
+    test_minibatches -- test dataset batched into minibatches.
+
+    Returns:
+    accuracy -- accuracy of the model on the test dataset.
+    """
+    # The CategoricalAccuracy will track the accuracy for the multiclass problem
+    test_accuracy = tf.keras.metrics.CategoricalAccuracy()
+
+    # Iterate over each minibatch and evaluate the model's accuracy
+    for (minibatch_X, minibatch_Y) in test_minibatches:
+        Z_test = forward_propagation(tf.transpose(minibatch_X), parameters)
+        test_accuracy.update_state(minibatch_Y, tf.transpose(Z_test))
+
+    accuracy = test_accuracy.result()
+    test_accuracy.reset_state()
+    
+    return accuracy
+
+
+
 def model(X_train, Y_train, X_test, Y_test, layer_dims, learning_rate = 0.0001,
           num_epochs = 1500, minibatch_size = 32, print_cost = True):
     """
@@ -112,7 +138,6 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, learning_rate = 0.0001,
     optimizer = tf.keras.optimizers.Adam(learning_rate)
     
     # The CategoricalAccuracy will track the accuracy for the multiclass problem
-    test_accuracy = tf.keras.metrics.CategoricalAccuracy()
     train_accuracy = tf.keras.metrics.CategoricalAccuracy()
     
     # zip the train and test dataset values and labels together
@@ -128,6 +153,7 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, learning_rate = 0.0001,
     num_batches = minibatches.cardinality().numpy()
     print("Total number of batches:", num_batches)
     
+    # Minibatches created once to make the test accuracy data consistent
     test_minibatches = test_dataset.batch(minibatch_size, drop_remainder=True).prefetch(8)
 
     for epoch in range(num_epochs):
@@ -163,17 +189,11 @@ def model(X_train, Y_train, X_test, Y_test, layer_dims, learning_rate = 0.0001,
         if print_cost == True and epoch % 10 == 0:
             print ("Cost after epoch %i: %f" % (epoch, epoch_total_loss))
             print("Train accuracy:", train_accuracy.result())
-            
-            # We evaluate the test set every 10 epochs to avoid computational overhead
-            for (minibatch_X, minibatch_Y) in test_minibatches:
-                Z_test = forward_propagation(tf.transpose(minibatch_X), parameters)
-                test_accuracy.update_state(minibatch_Y, tf.transpose(Z_test))
-            print("Test_accuracy:", test_accuracy.result())
-
             costs.append(epoch_total_loss)
             train_acc.append(train_accuracy.result())
-            test_acc.append(test_accuracy.result())
-            test_accuracy.reset_state()
+            
+            test_accuracy = evaluate_model(parameters, test_minibatches)
+            test_acc.append(test_accuracy)
 
 
     return parameters, costs, train_acc, test_acc

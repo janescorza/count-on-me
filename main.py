@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from model.neural_network_setup import model
+from model.neural_network_setup import forward_propagation, model
 from utils.prepare_dataset import prepare_dataset
 
 def prepare_model_hyperparameters(input_feature_size):
@@ -24,6 +24,23 @@ def prepare_model_hyperparameters(input_feature_size):
     layers_dims = (n_x, 25, 12, 6)  
     return layers_dims, learning_rate, num_epochs
 
+def predict_image(parameters, image):
+    """
+    Predict the class of a single image using the neural network.
+
+    Arguments:
+    parameters -- trained parameters of the neural network.
+    image -- a single image input, appropriately preprocessed to match the model's input requirements.
+
+    Returns:
+    prediction -- the output prediction of the model for the given image.
+    """
+    # Forward propagation for a single image
+    Z_image = forward_propagation(tf.transpose(image), parameters)
+    # Convert logits to probabilities using softmax
+    prediction = tf.nn.softmax(Z_image, axis=1) # TODO: evaluate if this is the correct axis and evaluation
+
+    return prediction
 
 def main():
     x_train, y_train, x_test, y_test, input_features = prepare_dataset()
