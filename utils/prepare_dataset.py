@@ -1,6 +1,9 @@
+import os
 import h5py
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import cv2
+
 
 def plot_sign_examples(x_train, y_train):
     """
@@ -103,3 +106,48 @@ def prepare_dataset():
     input_features = input_sample.shape[0]
     
     return  normalized_train, one_hot_train, normalized_test, one_hot_y_test, input_features, pure_test_images, pure_test_labels
+
+def preprocess_image_for_prediction(image_path):
+    """Reads an image from a file and resizes it."""
+    image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.resize(image, (64, 64))
+        
+    
+    plt.imshow(image)
+    plt.title("This is the image you uploaded:")
+    plt.show()
+        
+    return image
+
+# Function used to extract the images in the hand per label folder
+def extract_and_save_images(x_test, y_test, output_folder='data/hand_per_label'):
+    """
+    Extracts one image for each unique label from the test dataset and saves them into a specified folder.
+    
+    Arguments:
+    x_test -- tf.data.Dataset, test set of sign images.
+    y_test -- tf.data.Dataset, test set of sign labels.
+    output_folder -- str, folder where the images will be saved.
+    
+    """
+    # Create the directory if it does not exist
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    # Initialize a dictionary to track the extraction of images for labels 0 to 5
+    found_labels = {}
+    images_iter = iter(x_test)
+    labels_iter = iter(y_test)
+    
+    # Loop through the dataset and save the first image found for each label
+    while len(found_labels) < 6:
+        image = next(images_iter)
+        label = int(next(labels_iter).numpy())
+        
+        if label not in found_labels:
+            found_labels[label] = True
+            # Save the image using OpenCV
+            image_path = os.path.join(output_folder, f'label_{label}.png')
+            cv2.imwrite(image_path, cv2.cvtColor(image.numpy().astype('uint8'), cv2.COLOR_RGB2BGR))
+            print(f"Saved label {label} image to {image_path}")

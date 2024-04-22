@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from model.neural_network_setup import model, predict_image_with_parameters
-from utils.prepare_dataset import prepare_dataset
+from utils.prepare_dataset import prepare_dataset, preprocess_image_for_prediction
 
 def prepare_model_hyperparameters(input_feature_size):
     """
@@ -36,52 +36,6 @@ def select_mode():
             return int(choice)
         else:
             print("Invalid selection. Please choose 1 or 2 (or 3 to quit).")
-            
-def mode_identify_number(parameters, x_test, y_test):
-    """
-    Conducts a loop where it asks the user to identify numbers based on hand sign images,
-    compares the user's guess and neural network's prediction to the actual label, and
-    provides feedback on both guesses.
-
-    Arguments:
-    parameters -- dict, model parameters used for prediction.
-    x_test -- images from the test dataset.
-    y_test -- true labels corresponding to the images in x_test_list.
-
-    Returns:
-    None -- This function handles user interactions and does not return a value.
-    """
-    
-    x_test_list = list(x_test.as_numpy_iterator())
-    y_test_list = list(y_test.as_numpy_iterator())
-    
-    while True:
-        idx = np.random.randint(0, len(x_test_list))
-        
-        image, true_label = x_test_list[idx], y_test_list[idx]
-
-        plt.imshow(image)
-        plt.title("What number is this hand sign?")
-        plt.show()
-
-        print(f"\n")
-        user_guess = int(input("Enter your guess (0-5): "))        
-    
-        prediction = predict_image_with_parameters(image, parameters)
-        print(f"Your guess: {user_guess}")
-        print(f"Neural network prediction: {prediction}")
-        print("----------------------------")
-        print(f"Correct answer: {true_label}")
-        print("----------------------------")
-        
-        user_correct = user_guess == true_label
-        nn_correct = prediction == true_label
-        print( "Did you guess correctly? ", "\033[1;32mYes\033[0m" if user_correct else "\033[1;31mNo\033[0m")
-        print("Did the neural network guess correctly? ", "\033[1;32mYes\033[0m" if nn_correct else "\033[1;31mNo\033[0m")
-
-        continue_choice = input("\nDo you want to try another image? (y/n): ")
-        if continue_choice.lower() != 'y':
-            break
 
 def save_parameters(parameters, filepath='params/model_parameters.npy'):
     """
@@ -177,9 +131,95 @@ def load_or_retrain_parameters(parameters_filename, x_train, y_train, x_test, y_
     
     return parameters
 
+def mode_identify_number(parameters, x_test, y_test):
+    """
+    Conducts a loop where it asks the user to identify numbers based on hand sign images,
+    compares the user's guess and neural network's prediction to the actual label, and
+    provides feedback on both guesses.
+
+    Arguments:
+    parameters -- dict, model parameters used for prediction.
+    x_test -- images from the test dataset.
+    y_test -- true labels corresponding to the images in x_test_list.
+
+    Returns:
+    None -- This function handles user interactions and does not return a value.
+    """
+    
+    x_test_list = list(x_test.as_numpy_iterator())
+    y_test_list = list(y_test.as_numpy_iterator())
+    
+    while True:
+        idx = np.random.randint(0, len(x_test_list))
+        
+        image, true_label = x_test_list[idx], y_test_list[idx]
+
+        plt.imshow(image)
+        plt.title("What number is this hand sign?")
+        plt.show()
+
+        print(f"\n")
+
+        user_guess = int(input("\033[1;34mEnter your guess (0-5): \033[0m"))        
+    
+        prediction = predict_image_with_parameters(image, parameters)
+        print(f"Your guess: {user_guess}")
+        print(f"Neural network prediction: {prediction}")
+        print("----------------------------")
+        print(f"Correct answer: {true_label}")
+        print("----------------------------")
+        
+        user_correct = user_guess == true_label
+        nn_correct = prediction == true_label
+        print( "Did you guess correctly? ", "\033[1;32mYes\033[0m" if user_correct else "\033[1;31mNo\033[0m")
+        print("Did the neural network guess correctly? ", "\033[1;32mYes\033[0m" if nn_correct else "\033[1;31mNo\033[0m")
+
+        continue_choice = input("\nDo you want to try another image? (y/n): ")
+        if continue_choice.lower() != 'y':
+            break
+
+def mode_perform_sign(parameters):
+    """
+    Asks the user to perform hand signs for randomly selected numbers, predicts using the neural network,
+    and provides feedback on whether the performed sign matches the expected sign.
+
+    Arguments:
+    parameters -- dict, model parameters used for prediction.
+
+    Returns:
+    None -- This function handles user interactions and does not return a value.
+    """ 
+    
+    while True:
+        target_number = np.random.randint(0, 6)
+        # print(f"\033[1;34mPlease perform the hand sign for the number {target_number} and take a photo (or use those in folder hand_per_label to ensure distribution consistency).\033[0m")
+        print(f"\033[1;34mPlease perform the hand sign for the number \033[1;33m{target_number}\033[0m\033[1;34m and take a photo (or use those in folder hand_per_label to ensure distribution consistency).\033[0m")
+
+        image_path = input("Enter the path to your image: ")
+        image = preprocess_image_for_prediction(image_path)
+        image = np.expand_dims(image, axis=0)  # Add batch dimension
+
+        prediction = predict_image_with_parameters(image, parameters)
+
+        print(f"You did the hand sign for: {prediction}")
+        if prediction == target_number:
+            print("\033[1;32mCongratulations! Your hand sign matches the number.\033[0m")
+        else:
+            print(f"\033[1;31mOops! Your hand sign did not match. You showed {prediction}.\033[0m")
+
+        continue_choice = input("Do you want to try another number? (y/n): ")
+        print(f"\n")
+        if continue_choice.lower() != 'y':
+            break
+
+
 def main():
     
     x_train, y_train, x_test, y_test, input_features, pure_test_images, pure_test_labels = prepare_dataset()
+    
+    # If you needed to extract images from the test set to use on mode 2
+    # extract_and_save_images(pure_test_images, pure_test_labels)
+
     
     parameters_filename = 'params/model_parameters.npy'
     parameters = load_or_retrain_parameters(parameters_filename, x_train, y_train, x_test, y_test, input_features)
@@ -189,7 +229,7 @@ def main():
         if mode == 1:
             mode_identify_number(parameters, pure_test_images, pure_test_labels)
         elif mode == 2:
-            break
+            mode_perform_sign(parameters)
         elif mode == 3:
             break
             
