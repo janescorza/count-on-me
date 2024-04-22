@@ -4,12 +4,11 @@ import matplotlib.pyplot as plt
 
 def plot_sign_examples(x_train, y_train):
     """
-    Plot a 5x5 grid of sample images from the dataset
+    Plots a 5x5 grid of sample images from the dataset.
     
     Arguments:
-    x_train (tf.data.Dataset): Training set of sign images
-    y_train (tf.data.Dataset): Training set of sign labels
-    
+    x_train -- tf.data.Dataset, training set of sign images.
+    y_train -- tf.data.Dataset, training set of sign labels.
     """
     images_iter = iter(x_train)
     labels_iter = iter(y_train)
@@ -23,10 +22,10 @@ def plot_sign_examples(x_train, y_train):
 
 def load_dataset():
     """
-    Load sign language datasets from HDF5 files for training and testing purposes.
-
+    Loads sign language datasets from HDF5 files for training and testing purposes.
+    
     Returns:
-    Tuple of tf.data.Datasets: Containing training and testing datasets for both images (x) and labels (y).
+    Tuple of tf.data.Datasets -- Containing training and testing datasets for both images (x) and labels (y).
     """
     train_dataset = h5py.File('data/training_set/train_signs.h5', "r")
     test_dataset = h5py.File('data/test_set/test_signs.h5', "r")
@@ -44,14 +43,13 @@ def load_dataset():
 
 def normalize(image):
     """
-    Transforms an image into a tensor of shape (64 * 64 * 3, )
-    and normalize its components.
+    Transforms an image into a normalized tensor of shape (64 * 64 * 3, ).
     
-    Arguments
-    image - Tensor.
+    Arguments:
+    image -- tf.Tensor, image tensor.
     
-    Returns: 
-    result -- Transformed tensor 
+    Returns:
+    result -- tf.Tensor, transformed and normalized tensor.
     """
     image = tf.cast(image, tf.float32) / 255.0
     image = tf.reshape(image, [-1,])
@@ -59,14 +57,14 @@ def normalize(image):
     
 def one_hot_matrix(label, num_classes=6):
     """
-    Computes the one hot encoding for a single label
+    Computes the one hot encoding for a single label.
     
     Arguments:
-        label --  (int) Categorical labels
-        num_classes --  (int) Number of different classes that label can take
-        
+    label -- int, categorical labels.
+    num_classes -- int, number of different classes that label can take.
+    
     Returns:
-         one_hot -- tf.Tensor A single-column matrix with the one hot encoding.
+    one_hot -- tf.Tensor, a single-column matrix with the one hot encoding.
     """
 
     one_hot = tf.reshape(tf.one_hot(label, num_classes, axis=0), shape=[num_classes,])
@@ -74,20 +72,22 @@ def one_hot_matrix(label, num_classes=6):
 
 def prepare_dataset():
     """
-    Prepares a small dataset for use, displays a sample image on request, and reshapes
-    and normalizes image data for training and testing.
-
+    Prepares and normalizes the dataset for use, optionally displaying sample images.
+    
     Returns:
-    tuple of numpy.ndarray: Normalized training and testing data and labels.
+    tuple -- normalized training and testing data and labels, and additional dataset details.
     """
     x_train, y_train, x_test, y_test, classes = load_dataset()
     
     print("Element spec of training dataset:", x_train.element_spec)
     print(f"The dataset contains {classes.size} classes which are the following: {classes}")
     
-    # show_sample = input("Would you like to see an example of the pictures in the dataset? (y/n)")
-    # if show_sample.lower() == 'y':
-    #     plot_sign_examples(x_train, y_train)
+    show_sample = input("Would you like to see an example of the pictures in the dataset? (y/n)")
+    if show_sample.lower() == 'y':
+        plot_sign_examples(x_train, y_train)
+    
+    pure_test_images = x_test
+    pure_test_labels = y_test
         
     normalized_train = x_train.map(normalize)
     normalized_test = x_test.map(normalize)
@@ -102,4 +102,73 @@ def prepare_dataset():
     input_sample = next(iter(normalized_train))
     input_features = input_sample.shape[0]
     
-    return  normalized_train, one_hot_train, normalized_test, one_hot_y_test, input_features
+    return  normalized_train, one_hot_train, normalized_test, one_hot_y_test, input_features, pure_test_images, pure_test_labels
+
+def prepare_image():
+    """
+    Prepares an image by normalizing its values and reshaping it for training and testing.
+    
+    Returns:
+    tuple -- normalized training and testing data and labels.
+    """
+    x_train, y_train, x_test, y_test, classes = load_dataset()
+    
+    print("Element spec of training dataset:", x_train.element_spec)
+    print(f"The dataset contains {classes.size} classes which are the following: {classes}")
+    
+    show_sample = input("Would you like to see an example of the pictures in the dataset? (y/n)")
+    if show_sample.lower() == 'y':
+        plot_sign_examples(x_train, y_train)
+    
+    pure_test_images = x_test
+    pure_test_labels = y_test
+        
+    normalized_train = x_train.map(normalize)
+    normalized_test = x_test.map(normalize)
+        
+    print("Element spec of normalized training dataset:", normalized_train.element_spec)
+    
+    one_hot_train = y_train.map(lambda label: one_hot_matrix(label, num_classes=classes.size))    
+    one_hot_y_test = y_test.map(lambda label: one_hot_matrix(label, num_classes=classes.size))
+    
+    print("Sample element from one hot element from training dataset labels:", next(iter(one_hot_train)))
+
+    input_sample = next(iter(normalized_train))
+    input_features = input_sample.shape[0]
+    
+    return  normalized_train, one_hot_train, normalized_test, one_hot_y_test, input_features, pure_test_images, pure_test_labels
+
+def prepare_image(image):
+    """
+    Prepares an image by nomalizing its value and its label  reshapes
+    and normalizes image data for training and testing.
+
+    Returns:
+    tuple of numpy.ndarray: Normalized training and testing data and labels.
+    """
+    x_train, y_train, x_test, y_test, classes = load_dataset()
+    
+    print("Element spec of training dataset:", x_train.element_spec)
+    print(f"The dataset contains {classes.size} classes which are the following: {classes}")
+    
+    show_sample = input("Would you like to see an example of the pictures in the dataset? (y/n)")
+    if show_sample.lower() == 'y':
+        plot_sign_examples(x_train, y_train)
+    
+    pure_test_images = x_test
+    pure_test_labels = y_test
+        
+    normalized_train = x_train.map(normalize)
+    normalized_test = x_test.map(normalize)
+        
+    print("Element spec of normalized training dataset:", normalized_train.element_spec)
+    
+    one_hot_train = y_train.map(lambda label: one_hot_matrix(label, num_classes=classes.size))    
+    one_hot_y_test = y_test.map(lambda label: one_hot_matrix(label, num_classes=classes.size))
+    
+    print("Sample element from one hot element from training dataset labels:", next(iter(one_hot_train)))
+
+    input_sample = next(iter(normalized_train))
+    input_features = input_sample.shape[0]
+    
+    return  normalized_train, one_hot_train, normalized_test, one_hot_y_test, input_features, pure_test_images, pure_test_labels
