@@ -9,8 +9,9 @@
 Ready to dive into the fun? Here’s how to get the ball rolling:
 
 1. **Clone the Repository**: Run `git clone https://github.com/your-username/count-on-me.git`
-2. **Install Requirements**: Execute `pip install -r requirements.txt` to get the necessary libraries.
-3. **Launch the Application**: Kick off your adventure with `python main.py`.
+2. **Create a virtual environment**: Run `python -m venv env` and then `source env/bin/activate` to create and activate the virtual environment
+3. **Install Requirements**: Execute `pip install -r requirements.txt` to get the necessary libraries.
+4. **Launch the Application**: Kick off your adventure with `python main.py`.
 
 ## Prerequisites 📋
 You'll need Python 3.6 or later, and make sure your computer is equipped with a webcam to interact in real-time!
